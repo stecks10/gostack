@@ -1,5 +1,5 @@
 const express = require('express');
-const { uuid } = require('uuidv4');
+const { v4: uuidv4, isUuid } = require('uuid');
 
 const app = express();
 
@@ -19,11 +19,41 @@ app.use(express.json());
  * Query Params: Filtros e paginação
  * Route Params: Identificar recursos (Atualizar/deletar)
  * Rquest Body: Conteúdo na hora dcriar ou editar um recurso (JSON)
+ * 
+ * 
+ * 
+ * Middleware: 
+ * Interceptador de requisições que interromper totalmente a requisiçãoou alterar dados da requisição
  */
 
 const projects = [];
 
-app.get('/projects', (request, response) => {
+function logRequest(request, response, next) {
+  const {  method, url } = request;
+
+  const logLabel= `[${method.toUpperCase()}] ${url}`;
+  console.time(logLabel);
+
+   next(); // Proximo middleware
+  console.timeEnd(logLabel);
+}
+
+function validadeProjectId(request, response, next) {
+  const { id } = request.params;
+
+  if (!isUuid(id)) {
+    return response.status(400).json({ error: 'Invalid project ID.'});
+  }
+
+  return next();
+}
+
+
+app.use(logRequest);
+app.use('/project/:id', validadeProjectId)
+
+app.get('/projects',logRequest, (request, response) => {
+
     const {title} = request.query;
 
     const results = title
@@ -37,7 +67,7 @@ app.get('/projects', (request, response) => {
 app.post('/projects',  (request, response) => {
     const {title, owner} = request.body;
 
-    const project = { id: uuid(), title, owner};
+    const project = { id: uuidv4(), title, owner};
 
     projects.push(project);
 
@@ -46,7 +76,7 @@ app.post('/projects',  (request, response) => {
 });
 //http://localhost:3333/project/2
 
-app.put ('/projects/:id', (request, response) => {
+app.put ('/projects/:id',  (request, response) => {
   const { id } = request.params;
   const { title, owner } = request.body;
 
