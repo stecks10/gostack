@@ -1,8 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 const { v4: uuidv4, isUuid } = require('uuid');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 /**
@@ -29,12 +31,12 @@ app.use(express.json());
 const projects = [];
 
 function logRequest(request, response, next) {
-  const {  method, url } = request;
+  const { method, url } = request;
 
-  const logLabel= `[${method.toUpperCase()}] ${url}`;
+  const logLabel = `[${method.toUpperCase()}] ${url}`;
   console.time(logLabel);
 
-   next(); // Proximo middleware
+  next(); // Proximo middleware
   console.timeEnd(logLabel);
 }
 
@@ -42,7 +44,7 @@ function validadeProjectId(request, response, next) {
   const { id } = request.params;
 
   if (!isUuid(id)) {
-    return response.status(400).json({ error: 'Invalid project ID.'});
+    return response.status(400).json({ error: 'Invalid project ID.' });
   }
 
   return next();
@@ -52,43 +54,43 @@ function validadeProjectId(request, response, next) {
 app.use(logRequest);
 app.use('/project/:id', validadeProjectId)
 
-app.get('/projects',logRequest, (request, response) => {
+app.get('/projects', logRequest, (request, response) => {
 
-    const {title} = request.query;
+  const { title } = request.query;
 
-    const results = title
-     ? projects.filter(project  => project.title.includes(title))
-     : projects;
+  const results = title
+    ? projects.filter(project => project.title.includes(title))
+    : projects;
 
 
-    return response.json(results);
+  return response.json(results);
 });
 
-app.post('/projects',  (request, response) => {
-    const {title, owner} = request.body;
+app.post('/projects', (request, response) => {
+  const { title, owner } = request.body;
 
-    const project = { id: uuidv4(), title, owner};
+  const project = { id: uuidv4(), title, owner };
 
-    projects.push(project);
+  projects.push(project);
 
 
-    return response.json(project);
+  return response.json(project);
 });
 //http://localhost:3333/project/2
 
-app.put ('/projects/:id',  (request, response) => {
+app.put('/projects/:id', (request, response) => {
   const { id } = request.params;
   const { title, owner } = request.body;
 
   const projectIndex = projects.findIndex(project => project.id === id);
 
-  if(projectIndex <0) {
+  if (projectIndex < 0) {
     return response.status(400).json({ error: 'project not found.' })
   }
 
   const project = {
     id,
-    title, 
+    title,
     owner,
   };
 
@@ -97,22 +99,22 @@ app.put ('/projects/:id',  (request, response) => {
   return response.json(project);
 });
 
-app.delete('/projects/:id',  (request, response) => {
-    const { id } = request.params;
+app.delete('/projects/:id', (request, response) => {
+  const { id } = request.params;
 
-    const projectIndex = projects.findIndex(project => project.id === id);
+  const projectIndex = projects.findIndex(project => project.id === id);
 
-    if(projectIndex <0) {
-      return response.status(400).json({ error: 'project not found.' })
-    }
+  if (projectIndex < 0) {
+    return response.status(400).json({ error: 'project not found.' })
+  }
 
-    projects.splice(projectIndex, 1);
+  projects.splice(projectIndex, 1);
 
 
-    return response.status(204).send();
+  return response.status(204).send();
 });
 
 
 app.listen(3333, () => {
-    console.log('🚀 Back-end started!');
+  console.log('🚀 Back-end started!');
 });
