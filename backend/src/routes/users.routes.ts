@@ -1,8 +1,13 @@
-import { Router } from 'express';
+import {  Router } from 'express';
+import multer from 'multer';
+import uploadConfig from '../config/upload';
 
 import CreateUserService from '../services/CreateUserService';
 
+import ensureAuthenticated from '../middlewares/ensureAuthenticated';
+
 const usersRouter = Router();
+const upload= multer(uploadConfig);
 
 usersRouter.post('/', async (request, response) => {
   try {
@@ -16,7 +21,6 @@ usersRouter.post('/', async (request, response) => {
       password,
     });
 
-  // Com a atualização do TypeScript, isso se faz necessário
   const userWithoutPassword = {
     id: user.id,
     name: user.name,
@@ -29,6 +33,12 @@ usersRouter.post('/', async (request, response) => {
   } catch (err) {
     return response.status(400).json({ error: err.message });
   }
+});
+
+usersRouter.patch('/avatar', ensureAuthenticated, upload.single('avatar'),
+async (request, response) => {
+  console.log(request.file);
+  return response.json({ ok: true});
 });
 
 export default usersRouter;
