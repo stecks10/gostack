@@ -71,9 +71,6 @@ const SignIn: React.FC = () => {
 
         });
 
-
-
-
         history.push('/dashboard');
 
       } catch (err) {
